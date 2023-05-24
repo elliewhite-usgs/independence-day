@@ -1,0 +1,70 @@
+---
+title: "independence day"
+author: "Ellie White"
+date: "9/5/2020"
+output: html_document
+---
+
+Data from wikipedia: https://en.wikipedia.org/wiki/List_of_countries_that_have_gained_independence_from_the_United_Kingdom + research to fill in the holes. 
+
+```{r readdata}
+iday <- read.csv("iday.csv", fileEncoding="UTF-8-BOM", na.strings=c(""))
+iday$DATE <- as.Date(with(iday, paste(iday$DAY, iday$MONTH, iday$YEAR, sep="-")), "%d-%m-%Y")
+iday <- iday[order(iday$DATE), ]
+str(iday)
+head(iday)
+tail(iday)
+summary(iday)
+hist(iday$MONTH)
+hist(iday$DAY, breaks=seq(1,31,1))
+hist(iday$YEAR)
+plot(density(iday$YEAR))
+str(iday)
+```
+
+```{r plots}
+# library(tidyr)
+# library(dplyr)
+# library(viridis)
+# library(sugrrants)
+# library(ggplot2)
+# 
+# iday_calendar <- iday %>% frame_calendar(x = DAY, y = 1, date = DATE, calendar = "monthly")
+# iday_calendar
+# 
+# ggplot(data=iday_calendar, aes(x = .DAY, y = .y)) +
+#   geom_tile(aes(fill = 1), colour = "grey50") +
+#   scale_fill_viridis()
+# 
+# 
+# ggplot(iday,aes(x=MONTH,y=YEAR, fill=DAY))+
+#       geom_tile()
+
+library(plyr)
+library(plotly)
+library(lubridate)
+library(zoo)
+
+iday$weekday <- as.POSIXlt(iday$DATE)$wday #finding the day no. of the week
+iday$weekdayf <- factor(iday$weekday,levels=rev(1:7),labels=rev(c("Mon","Tue","Wed","Thu","Fri","Sat","Sun")),ordered=TRUE) # converting the day no. to factor
+
+iday$monthf <- factor(month(iday$DATE),levels=as.character(1:12),labels=c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"), ordered=TRUE) # finding the month
+
+iday$yearmonth <- factor(as.yearmon(iday$DATE)) # finding the year and the month from the date. Eg: Nov 2018
+
+iday$week <- as.numeric(format(iday$DATE,"%W")) # finding the week of the year for each date
+
+iday$monthweek <- iday$week%%4+1 # finding weak of the month (1-4)
+
+iday_subset <- iday[1:10, ]
+
+ggplot(iday_subset, aes(monthweek, weekdayf, fill = 1)) + 
+  geom_tile(colour = "white") + 
+  facet_grid(year(iday_subset$DATE)~monthf) + 
+  # scale_fill_gradient(low="red", high="green") +  
+  xlab("Week of Month") + 
+  ylab("") + 
+  ggtitle("The sun never (?) sets on the British empire!") + 
+  labs(fill = "Independece\nDay")
+```
+
