@@ -8,7 +8,7 @@ output: html_document
 Data from wikipedia: https://en.wikipedia.org/wiki/List_of_countries_that_have_gained_independence_from_the_United_Kingdom + research to fill in the holes. 
 
 ```{r readdata}
-iday <- read.csv("iday.csv", fileEncoding="UTF-8-BOM", na.strings=c(""))
+iday <- read.csv("in/iday.csv", fileEncoding="UTF-8-BOM", na.strings=c(""))
 iday$DATE <- as.Date(with(iday, paste(iday$DAY, iday$MONTH, iday$YEAR, sep="-")), "%d-%m-%Y")
 iday <- iday[order(iday$DATE), ]
 str(iday)
@@ -56,15 +56,31 @@ iday$week <- as.numeric(format(iday$DATE,"%W")) # finding the week of the year f
 
 iday$monthweek <- iday$week%%4+1 # finding weak of the month (1-4)
 
-iday_subset <- iday[1:10, ]
+iday$daymonth <- format(iday$DATE,"%m-%d")
+iday$daymonth2023 <- as.Date(paste0(iday$daymonth, "-2023"), format = "%m-%d-%Y")
 
-ggplot(iday_subset, aes(monthweek, weekdayf, fill = 1)) + 
+
+
+library(calendR)
+calendR(year = 2023,
+        special.days = iday$daymonth2023,
+        gradient = TRUE,
+        low.col = "#FFFFED",
+        special.col = "#FF0000")
+
+library(tidyverse)
+iday_count <- iday |>
+  count(MONTH)
+
+
+ggplot(iday, aes(monthweek, weekdayf, fill = 1)) + 
   geom_tile(colour = "white") + 
-  facet_grid(year(iday_subset$DATE)~monthf) + 
+  facet_grid(YEAR~monthf) + 
   # scale_fill_gradient(low="red", high="green") +  
   xlab("Week of Month") + 
   ylab("") + 
   ggtitle("The sun never (?) sets on the British empire!") + 
   labs(fill = "Independece\nDay")
+ggsave("out/calendar.png")
 ```
 
